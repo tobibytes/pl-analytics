@@ -204,29 +204,64 @@ def _build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command")
 
     def common(p):
-        p.add_argument("-o", "--output", help="Where to write the PNG.")
-        p.add_argument("--csv", help="Also write the underlying rows to this CSV.")
+        p.add_argument(
+            "-o", "--output", metavar="PATH",
+            help="Where to write the PNG. Default: output/<command>_<filters>.png",
+        )
+        p.add_argument(
+            "--csv", metavar="PATH",
+            help="Also write the rows behind the chart to this CSV.",
+        )
         p.add_argument(
             "--show", action="store_true", help="Open a window instead of saving."
         )
         return p
 
     luck = common(sub.add_parser("luck", help="Points banked against points deserved."))
-    luck.add_argument("--top", type=int, help="Only the N biggest gaps.")
+    luck.add_argument(
+        "--top", type=int, metavar="N",
+        help="Only the N biggest gaps, either direction. Default: all 20 clubs.",
+    )
 
     rec = common(
         sub.add_parser("recruit", help="npxG vs xA per 90 — the shortlist scatter.")
     )
-    rec.add_argument("--position", nargs="+", help="GK DEF MID FWD. Default MID FWD.")
-    rec.add_argument("--min-minutes", type=int, default=270)
-    rec.add_argument("--max-age", type=int)
-    rec.add_argument("--max-price", type=float)
-    rec.add_argument("--labels", type=int, default=12, help="How many players to name.")
-    rec.add_argument("--highlight", nargs="+", help="Name these players instead.")
+    rec.add_argument(
+        "--position", nargs="+", metavar="POS",
+        help="GK DEF MID FWD. Default: MID FWD — the other two pile up at the "
+        "origin, because these axes are not about their job.",
+    )
+    rec.add_argument(
+        "--min-minutes", type=int, default=270, metavar="N",
+        help="Minimum minutes played (default: 270, about three full matches — "
+        "below that a per-90 is mostly noise).",
+    )
+    rec.add_argument(
+        "--max-age", type=int, metavar="N",
+        help="Only players this age or younger. Default: no limit.",
+    )
+    rec.add_argument(
+        "--max-price", type=float, metavar="M",
+        help="Only players at or below this FPL price in £m. Default: no limit.",
+    )
+    rec.add_argument(
+        "--labels", type=int, default=12, metavar="N",
+        help="How many players to name (default: 12). More becomes a wall of text.",
+    )
+    rec.add_argument(
+        "--highlight", nargs="+", metavar="NAME",
+        help="Name these players instead of the top scorers on the combined axis.",
+    )
 
     val = common(sub.add_parser("value", help="FPL price against expected production."))
-    val.add_argument("--min-minutes", type=int, default=180)
-    val.add_argument("--max-price", type=float)
+    val.add_argument(
+        "--min-minutes", type=int, default=180, metavar="N",
+        help="Minimum minutes played (default: 180).",
+    )
+    val.add_argument(
+        "--max-price", type=float, metavar="M",
+        help="Only players at or below this price in £m. Default: no limit.",
+    )
     val.add_argument(
         "--include-unavailable", action="store_true",
         help="Keep injured and suspended players in.",
@@ -235,7 +270,10 @@ def _build_parser() -> argparse.ArgumentParser:
     pre = common(
         sub.add_parser("press", help="PPDA against xG conceded — defensive style.")
     )
-    pre.add_argument("--highlight", nargs="+", help="Clubs to pick out.")
+    pre.add_argument(
+        "--highlight", nargs="+", metavar="CLUB",
+        help="Clubs to pick out in the accent colour, e.g. Arsenal Brighton.",
+    )
 
     sho = common(sub.add_parser("shots", help="Shot map for one match."))
     sho.add_argument(
@@ -252,7 +290,10 @@ def _build_parser() -> argparse.ArgumentParser:
     fix = sub.add_parser(
         "fixtures", help="Upcoming matches with kick-off times and referees."
     )
-    fix.add_argument("--next", type=int, default=10, help="How many to show.")
+    fix.add_argument(
+        "--next", type=int, default=10, metavar="N",
+        help="How many upcoming fixtures to list (default: 10).",
+    )
 
     clear = sub.add_parser("clear-cache", help="Drop cached API responses.")
     clear.add_argument(
