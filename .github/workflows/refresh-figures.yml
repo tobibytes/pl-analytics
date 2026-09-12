@@ -52,6 +52,7 @@ jobs:
           uv run football recruit -o output/recruitment.png
           uv run football value   -o output/fpl_value.png
           uv run football press   -o output/press.png
+          uv run football schedule -o output/schedule.png
           uv run football shots --match latest -o output/shot_map_live.png
 
       - name: Show the current table in the run log

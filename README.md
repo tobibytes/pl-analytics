@@ -9,9 +9,11 @@ tracking the **2026/27 Premier League**.
 | **`recruit`** | npxG vs xA per 90 — who creates, who finishes |
 | **`value`** | FPL price against expected production |
 | **`press`** | PPDA against xG conceded — how a side defends |
+| **`schedule`** | Fixture run difficulty — who has the kind month |
 | **`shots`** | Shot map for a single match, sized by xG |
 
 ![Luck table](output/luck_table.png)
+![Fixture run difficulty](output/schedule.png)
 
 ## Quick start
 
