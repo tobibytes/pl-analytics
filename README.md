@@ -38,19 +38,31 @@ No API key is needed for any chart. Four of the five sources are keyless.
 ModuleNotFoundError: No module named 'football'
 ```
 
-You created the virtualenv with uv older than 0.12. Upgrading uv does not fix
-an environment it already built — the bad `.pth` file stays, and `uv sync`
-leaves it alone because the package looks installed. Rebuild it once:
+You built the environment with uv older than 0.12 at some point. Clear the
+build cache as well as the environment — rebuilding alone is not enough:
 
 ```bash
+uv cache clean football
 rm -rf .venv
 uv sync
 ```
 
-(The cause: uv below 0.12 wrote its editable-install `.pth` with the macOS
-`UF_HIDDEN` flag, and CPython 3.13's `site.addpackage()` skips hidden `.pth`
-files. `ls -lO .venv/lib/python3.13/site-packages/` shows `hidden` on the
-offending file.)
+The cause, in full, because half of it is not guessable:
+
+1. uv below 0.12 wrote its editable-install `.pth` with the macOS `UF_HIDDEN`
+   flag, and CPython 3.13's `site.addpackage()` **skips hidden `.pth` files**.
+   The package is installed, correctly, and simply never reaches `sys.path`.
+2. That artifact was cached. `uv sync` restores it from the cache as a
+   **hardlink**, flag and all — so `rm -rf .venv && uv sync` fixes it until the
+   next cache restore brings the same inode back. Hence `uv cache clean`.
+
+Confirm it is healthy with:
+
+```bash
+ls -lO .venv/lib/python3.13/site-packages/
+```
+
+The flags column reads `hidden` when broken and `-` when correct.
 
 ## The commands
 
