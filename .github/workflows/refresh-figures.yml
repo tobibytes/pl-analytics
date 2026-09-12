@@ -1,0 +1,73 @@
+name: Refresh figures
+
+# The charts in the README are generated from live data, so they go stale on
+# their own. This regenerates them after each weekend's fixtures.
+#
+# It doubles as a canary. Understat has no public API and the routes this
+# project uses were read out of the site's own JavaScript; if they change, this
+# job fails and you find out from a notification rather than from a chart that
+# quietly stopped updating.
+
+on:
+  schedule:
+    # 06:00 UTC Monday — after the weekend's matches have settled in Understat.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# A scheduled run and a manual one must never race to commit the same files.
+concurrency:
+  group: refresh-figures
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          # pyproject requires >= 0.12; see the note there about older uv
+          # hiding its .pth files.
+          version: "0.12.13"
+          enable-cache: true
+
+      - name: Sync the locked environment
+        run: uv sync --locked --group dev
+
+      - name: Run tests
+        # Pure logic, no network. If the name matching or the club
+        # reconciliation has broken, stop before committing bad charts.
+        run: uv run --group dev pytest -q
+
+      - name: Regenerate figures
+        run: |
+          uv run football luck    -o output/luck_table.png
+          uv run football recruit -o output/recruitment.png
+          uv run football value   -o output/fpl_value.png
+          uv run football press   -o output/press.png
+          uv run football shots --match latest -o output/shot_map_live.png
+
+      - name: Show the current table in the run log
+        # So the run itself is readable without downloading anything.
+        run: uv run football table
+
+      - name: Commit if anything moved
+        run: |
+          if git diff --quiet -- output; then
+            echo "No change — the data has not moved since the last run."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add output
+          git commit -m "Refresh figures ($(date -u +%Y-%m-%d))
+
+          Regenerated from live Understat and FPL data by the weekly job."
+          git push
