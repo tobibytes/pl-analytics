@@ -32,6 +32,26 @@ uv run football table
 
 No API key is needed for any chart. Four of the five sources are keyless.
 
+### If `import football` fails
+
+```
+ModuleNotFoundError: No module named 'football'
+```
+
+You created the virtualenv with uv older than 0.12. Upgrading uv does not fix
+an environment it already built — the bad `.pth` file stays, and `uv sync`
+leaves it alone because the package looks installed. Rebuild it once:
+
+```bash
+rm -rf .venv
+uv sync
+```
+
+(The cause: uv below 0.12 wrote its editable-install `.pth` with the macOS
+`UF_HIDDEN` flag, and CPython 3.13's `site.addpackage()` skips hidden `.pth`
+files. `ls -lO .venv/lib/python3.13/site-packages/` shows `hidden` on the
+offending file.)
+
 ## The commands
 
 ```bash

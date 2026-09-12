@@ -15,6 +15,13 @@ editable-install `.pth` with the macOS `UF_HIDDEN` flag, and CPython 3.13's
 bare `ModuleNotFoundError` and nothing explains why. Verified: 0.8.22 broken,
 0.12.13 fine.
 
+`required-version` stops an old uv building a bad venv, but it cannot repair
+one already built — upgrading uv leaves the hidden `.pth` in place, and
+`uv sync` skips it because the package looks installed. The fix is always
+`rm -rf .venv && uv sync`. Check with
+`ls -lO .venv/lib/python3.13/site-packages/`: the flags column reads `hidden`
+on a broken install and `-` on a good one.
+
     uv sync
     uv run football luck
     uv run --group dev pytest
