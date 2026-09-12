@@ -92,6 +92,15 @@ against it without checking `/status` first.
   match with few defensive actions dominates the number.
 - **Penalties inflate xG by a constant** that says nothing about play. Use
   `npxg` for anything comparing players.
+- **Understat's `forecast` only exists on played fixtures.** It is a
+  retrospective read of who deserved the result, not a pre-match prediction —
+  all 350 unplayed fixtures carry `NaN`. Anything forward-looking has to model
+  it, which is what `projects/schedule.py` does.
+- **Early-season rates need shrinking.** Three matches of xG difference is
+  mostly noise; `schedule.team_ratings()` pulls every club towards the league
+  average by `n / (n + PRIOR_MATCHES)`. The league's total npxG difference is
+  zero by construction, which makes that a straight scaling rather than a
+  weighted mean. Any new rate-based metric should do the same.
 - **FPL returns most numerics as strings**, and nulls as empty strings.
 - StatsBomb `minute` is *elapsed*, so a goal 22:41 in is minute 22 — football
   calls that the 23rd. The shot-map path adds the +1.

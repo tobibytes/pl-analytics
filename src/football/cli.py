@@ -109,6 +109,11 @@ def _figure_for(args, season: Season):
             available_only=not args.include_unavailable,
         )
 
+    if args.command == "schedule":
+        from .projects import schedule
+
+        return schedule.figure(season, count=args.count, highlight=args.highlight)
+
     if args.command == "press":
         from .projects import press
 
@@ -170,7 +175,7 @@ def _print_fixtures(args) -> int:
 def _slug(args) -> str:
     """A filename that records the filters, so two runs do not overwrite."""
     parts = [args.command]
-    for name in ("position", "max_age", "max_price", "match"):
+    for name in ("position", "max_age", "max_price", "match", "count"):
         value = getattr(args, name, None)
         if not value:
             continue
@@ -193,6 +198,7 @@ def _build_parser() -> argparse.ArgumentParser:
             "  football recruit --position FWD      under-24 forwards\n"
             "  football value --max-price 8.0       cheap production\n"
             "  football press --highlight Arsenal   pressing profiles\n"
+            "  football schedule --count 8          who has the kind run\n"
             "  football shots --match latest        shot map, most recent game\n"
             "  football table                       the luck table as text\n"
             "  football fixtures --next 10          kick-off times and referees\n"
@@ -273,6 +279,20 @@ def _build_parser() -> argparse.ArgumentParser:
     pre.add_argument(
         "--highlight", nargs="+", metavar="CLUB",
         help="Clubs to pick out in the accent colour, e.g. Arsenal Brighton.",
+    )
+
+    sch = common(
+        sub.add_parser(
+            "schedule", help="Fixture run difficulty — who has the kind month."
+        )
+    )
+    sch.add_argument(
+        "--count", type=int, default=6, metavar="N",
+        help="How many fixtures ahead to show (default: 6, max 12).",
+    )
+    sch.add_argument(
+        "--highlight", nargs="+", metavar="CLUB",
+        help="Pick these clubs out in the accent colour.",
     )
 
     sho = common(sub.add_parser("shots", help="Shot map for one match."))
