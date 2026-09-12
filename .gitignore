@@ -1,0 +1,24 @@
+.venv/
+__pycache__/
+*.pyc
+
+# statsbombpy's requests-cache database
+*.sqlite
+
+# Secrets
+.env
+
+# Cached API responses
+.cache/
+
+# Generated figures. The five in the README are committed so the page renders
+# on GitHub; everything else a run produces is yours, not the repo's.
+output/*
+!output/luck_table.png
+!output/recruitment.png
+!output/fpl_value.png
+!output/press.png
+!output/shot_map.png
+!output/shot_map_live.png
+
+.DS_Store
