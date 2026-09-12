@@ -22,7 +22,7 @@ CPython 3.13 then ignores, and `import football` fails with a bare
 than let you hit that.
 
 ```bash
-git clone <this repo> && cd soccer
+git clone https://github.com/tobibytes/pl-analytics.git && cd pl-analytics
 uv self update          # if you are below 0.12
 uv sync                 # creates .venv, installs the pinned lockfile
 
@@ -172,3 +172,12 @@ output/         generated figures
 uv run --group dev pytest
 uv run --group dev ruff check
 ```
+
+## Licence
+
+MIT — see `LICENSE`.
+
+Data is not covered by that licence and belongs to its providers. StatsBomb's
+open-data terms **require attribution**; every figure carries it and you should
+keep it on anything you publish. Understat and the FPL API are used here for
+personal, non-commercial analysis.
