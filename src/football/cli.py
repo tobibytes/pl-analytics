@@ -177,19 +177,19 @@ def _print_weekend(season: Season, teams, maps: bool, out_dir: Path) -> None:
             f"{home.shots:>4}–{away.shots:<3}{home.big_chances:>3}–{away.big_chances:<2}{flag}"
         )
 
-    def block(title, frame, fmt):
+    def block(title, frame, detail):
         print(f"\n  {title}")
         for row in frame.head(5).itertuples():
-            print("    " + fmt(row))
+            print(f"    {row.player:<26}{row.team:<20}{detail(row)}")
 
-    block("Most npxG", shooters,
-          lambda r: f"{r.player:<26}{r.team:<20}{r.npxg:>5.2f} npxG  {r.goals} goal(s)")
-    block("Furthest below their chances", shooters.sort_values("finishing"),
-          lambda r: f"{r.player:<26}{r.team:<20}{r.goals} from {r.xg:.2f} xG")
-    block("Furthest above their chances", shooters.sort_values("finishing", ascending=False),
-          lambda r: f"{r.player:<26}{r.team:<20}{r.goals} from {r.xg:.2f} xG")
+    block("Most npxG", shooters, lambda r: f"{r.npxg:>5.2f} npxG  {r.goals} goal(s)")
+    finishing = shooters.sort_values("finishing")
+    block("Furthest below their chances", finishing,
+          lambda r: f"{r.goals} from {r.xg:.2f} xG")
+    block("Furthest above their chances", finishing[::-1],
+          lambda r: f"{r.goals} from {r.xg:.2f} xG")
     block("Chance creators", creators,
-          lambda r: f"{r.player:<26}{r.team:<20}{r.xa:>5.2f} xA from {r.chances} chance(s)")
+          lambda r: f"{r.xa:>5.2f} xA from {r.chances} chance(s)")
     print()
 
     if maps:

@@ -1,6 +1,6 @@
 # Project context
 
-Premier League analytics — five figures over one shared data layer. Python,
+Premier League analytics — seven figures over one shared data layer. Python,
 pandas, matplotlib, mplsoccer. Built to learn the craft, so the reasoning
 behind a choice matters as much as the choice.
 

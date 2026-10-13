@@ -1,6 +1,6 @@
 # Premier League analytics
 
-Five figures over one shared data layer, built on free football data. Currently
+Seven figures over one shared data layer, built on free football data. Currently
 tracking the **2026/27 Premier League**.
 
 | | |
@@ -85,6 +85,13 @@ uv run football value --include-unavailable
 uv run football press                              # defensive style
 uv run football press --highlight Arsenal Brighton
 
+uv run football schedule                           # next 6 fixtures, by difficulty
+uv run football schedule --count 8 --highlight Arsenal
+
+uv run football weekend                            # the latest round, xG vs goals
+uv run football weekend --maps                     # plus a shot map per match
+uv run football weekend --since 2026-10-10         # pick the start date yourself
+
 uv run football shots --match latest               # most recent match
 uv run football shots --match 31209                # a specific Understat match
 uv run football shots --match 3869685 --source statsbomb   # 2022 World Cup final
@@ -98,6 +105,35 @@ behind the chart, `--show` to open a window instead of saving, `--season 2025`
 to look at a previous season.
 
 `uv run football clear-cache` drops cached responses when you want fresh data.
+
+### The weekend round-up
+
+`weekend` finds the most recent round by itself: it works back from the latest
+kick-off until there is a gap of more than 36 hours, which keeps a Friday to
+Monday weekend together without merging it into a midweek round. Use `--since`
+when a rearranged fixture splits a week.
+
+The chart has one row per match. Each side's xG is a bar growing out from the
+centre, home to the left and away to the right, and a white dot marks the goals
+they scored, so a dot past its bar is a team that finished above its chances.
+An amber score means the side with clearly more xG (0.5 or more) did not win.
+Below the chart, the terminal prints each match's shots and big chances (shots
+of 0.3 xG or more) and the shooters and creators behind the numbers.
+
+## Seeing the output
+
+Figures are written to `output/` as PNGs, and the text commands print to the
+terminal.
+
+| To | Run |
+|---|---|
+| open a chart (macOS) | `open output/weekend.png` |
+| flip through everything | `open output`, select the files, press Space |
+| pop the chart up instead of saving it | add `--show` |
+| get the rows behind a chart | add `--csv output/weekend.csv` |
+
+Only the figures the weekly job writes are committed; everything else in
+`output/` is gitignored and yours.
 
 ## Optional: an API key
 
@@ -145,6 +181,7 @@ season.player_pool(min_minutes=270,    # Understat xG joined to FPL price/age
                    position="FWD",
                    max_age=23)
 season.fixtures                        # all 380, with xG and win forecasts
+season.shots([31236, 31237])           # every shot in these matches
 season.join_report.summary()           # how well the player name join went
 ```
 
@@ -189,7 +226,8 @@ trust a join.
 ```
 src/football/
   sources/      one module per upstream feed, returning tidy DataFrames
-  projects/     one module per figure
+  projects/     one module per figure (luck, recruit, value, press,
+                schedule, shots, weekend)
   season.py     the join: everything above, reconciled
   teams.py      club-name reconciliation across sources
   matching.py   player-name matching between Understat and FPL
