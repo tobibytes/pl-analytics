@@ -59,6 +59,19 @@ class Season:
     def matches_played(self) -> int:
         return int(self.fixtures["played"].sum())
 
+    def shots(self, match_ids) -> pd.DataFrame:
+        """Every shot in these matches, one row per shot, with ``team_key``.
+
+        Not cached on the instance: each match is its own request, and the
+        disk cache under ``sources`` already makes a repeat run free.
+        """
+        frames = [understat.shots(match_id) for match_id in match_ids]
+        if not frames:
+            return pd.DataFrame()
+        frame = pd.concat(frames, ignore_index=True)
+        frame["team_key"] = frame["team"].map(team_key)
+        return frame
+
     def table(self) -> pd.DataFrame:
         """The league table beside the table the underlying numbers imply.
 

@@ -11,13 +11,14 @@ __pycache__/
 # Cached API responses
 .cache/
 
-# Generated figures. The five in the README are committed so the page renders
-# on GitHub; everything else a run produces is yours, not the repo's.
+# Generated figures. The ones the weekly job writes are committed so the README
+# renders on GitHub; everything else a run produces is yours, not the repo's.
 output/*
 !output/luck_table.png
 !output/recruitment.png
 !output/fpl_value.png
 !output/press.png
+!output/schedule.png
 !output/shot_map.png
 !output/shot_map_live.png
 
