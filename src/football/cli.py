@@ -8,6 +8,7 @@ in common, and the output path, so the shape of one command teaches the rest:
     football value --max-price 8
     football press --highlight Arsenal Brighton
     football shots --match latest
+    football weekend --maps
 
 ``--show`` opens the figure instead of writing a file; ``--csv`` writes the
 frame behind the chart, because the chart is a summary and sometimes the rows
@@ -75,6 +76,9 @@ def _run(args) -> int:
     out.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out)
     print(f"Wrote {out}")
+
+    if args.command == "weekend":
+        _print_weekend(season, frame, maps=args.maps, out_dir=out.parent)
     return 0
 
 
@@ -128,6 +132,11 @@ def _figure_for(args, season: Season):
             print(f"Latest played match: {match}")
         return shot_map.figure(match, source=args.source)
 
+    if args.command == "weekend":
+        from .projects import weekend
+
+        return weekend.figure(season, since=args.since)
+
     raise ValueError(f"Unknown command {args.command!r}")
 
 
@@ -148,6 +157,55 @@ def _print_table(season: Season) -> int:
         )
     print()
     return 0
+
+
+def _print_weekend(season: Season, teams, maps: bool, out_dir: Path) -> None:
+    """The round-up as text: the chart says which results, this says who."""
+    from .projects import weekend
+
+    shots = season.shots(teams["match_id"].unique())
+    shooters, creators = weekend.player_summary(shots)
+
+    print(f"\n  {'MATCH':<38}{'xG':>12}  {'SHOTS':>7}  {'BIG':>5}")
+    print("  " + "-" * 66)
+    for _, pair in teams.groupby("match_id", sort=False):
+        home, away = pair.iloc[0], pair.iloc[1]
+        score = f"{home.team} {home.goals}-{away.goals} {away.team}"
+        flag = "  <- against the xG" if pair["against_the_play"].any() else ""
+        print(
+            f"  {score:<38}{home.xg:>5.2f} – {away.xg:<5.2f}"
+            f"{home.shots:>4}–{away.shots:<3}{home.big_chances:>3}–{away.big_chances:<2}{flag}"
+        )
+
+    def block(title, frame, fmt):
+        print(f"\n  {title}")
+        for row in frame.head(5).itertuples():
+            print("    " + fmt(row))
+
+    block("Most npxG", shooters,
+          lambda r: f"{r.player:<26}{r.team:<20}{r.npxg:>5.2f} npxG  {r.goals} goal(s)")
+    block("Furthest below their chances", shooters.sort_values("finishing"),
+          lambda r: f"{r.player:<26}{r.team:<20}{r.goals} from {r.xg:.2f} xG")
+    block("Furthest above their chances", shooters.sort_values("finishing", ascending=False),
+          lambda r: f"{r.player:<26}{r.team:<20}{r.goals} from {r.xg:.2f} xG")
+    block("Chance creators", creators,
+          lambda r: f"{r.player:<26}{r.team:<20}{r.xa:>5.2f} xA from {r.chances} chance(s)")
+    print()
+
+    if maps:
+        import matplotlib.pyplot as plt
+
+        from .projects import shot_map
+
+        folder = out_dir / f"weekend_{teams['kickoff'].min():%Y-%m-%d}"
+        folder.mkdir(parents=True, exist_ok=True)
+        for match_id in teams["match_id"].unique():
+            fig, _ = shot_map.figure(match_id)
+            pair = teams[teams["match_id"] == match_id]
+            name = "_v_".join(pair["team"]).replace(" ", "-").lower()
+            fig.savefig(folder / f"{name}.png")
+            plt.close(fig)  # ten pitches held open is ten figures of memory
+        print(f"  Shot maps in {folder}\n")
 
 
 def _print_fixtures(args) -> int:
@@ -202,6 +260,7 @@ def _build_parser() -> argparse.ArgumentParser:
             "  football shots --match latest        shot map, most recent game\n"
             "  football table                       the luck table as text\n"
             "  football fixtures --next 10          kick-off times and referees\n"
+            "  football weekend --maps              the latest round, with shot maps\n"
         ),
     )
     parser.add_argument(
@@ -303,6 +362,21 @@ def _build_parser() -> argparse.ArgumentParser:
     sho.add_argument(
         "--source", default="understat", choices=("understat", "statsbomb"),
         help="understat for this season; statsbomb for the open-data archive.",
+    )
+
+    wkd = common(
+        sub.add_parser(
+            "weekend", help="The latest round: did the results follow the chances?"
+        )
+    )
+    wkd.add_argument(
+        "--since", metavar="DATE",
+        help="Every played match from this date (YYYY-MM-DD) instead of the "
+        "latest round — for a week split by a rearranged fixture.",
+    )
+    wkd.add_argument(
+        "--maps", action="store_true",
+        help="Also write a shot map for every match in the round.",
     )
 
     sub.add_parser("table", help="Print the luck table as text.")

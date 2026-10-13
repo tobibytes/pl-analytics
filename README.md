@@ -11,6 +11,7 @@ tracking the **2026/27 Premier League**.
 | **`press`** | PPDA against xG conceded — how a side defends |
 | **`schedule`** | Fixture run difficulty — who has the kind month |
 | **`shots`** | Shot map for a single match, sized by xG |
+| **`weekend`** | The latest round — did each result follow the chances? |
 
 ![Luck table](output/luck_table.png)
 ![Fixture run difficulty](output/schedule.png)
